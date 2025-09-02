@@ -2,6 +2,7 @@ import streamlit as st
 import re
 import csv
 from pathlib import Path
+import urllib.parse
 
 # Configuração da página
 st.set_page_config(page_title="Calculadora para Impressão 3D", layout="centered")
@@ -67,6 +68,21 @@ if st.button("Calcular custos"):
 
     salvar_no_csv(nome_projeto, tempo_horas, filamento_gramas, custo_impressora, custo_filamento, custo_energia, preco_impressao, link_makerworld)
 
+    # ----------- Botão WhatsApp ----------- #
+    mensagem = f"Solicitação de Impressão:\n"
+    if nome_projeto:
+        mensagem += f"📌 Projeto: {nome_projeto}\n"
+    if link_makerworld:
+        mensagem += f"🔗 Link: {link_makerworld}\n"
+    mensagem += f"⏱️ Tempo: {tempo_horas:.2f}h\n"
+    mensagem += f"🧵 Filamento: {filamento_gramas:.2f}g\n"
+    mensagem += f"💰 Valor: R$ {preco_impressao:.2f}"
+
+    mensagem_encoded = urllib.parse.quote(mensagem)
+    whatsapp_url = f"https://wa.me/5592981246146?text={mensagem_encoded}"
+
+    st.markdown(f"[📩 Solicitar Impressão]({whatsapp_url})", unsafe_allow_html=True)
+
 # ---------------- Processamento do G-code ---------------- #
 if arquivo is not None:
     conteudo = arquivo.read().decode("utf-8")
@@ -94,5 +110,21 @@ if arquivo is not None:
             st.markdown(f"<p style='font-size:16px;'>🔗 Link do projeto: <a href='{link_makerworld}' target='_blank'>{link_makerworld}</a></p>", unsafe_allow_html=True)
 
         salvar_no_csv(nome_projeto, tempo_horas_auto, filamento_gramas_auto, custo_impressora, custo_filamento, custo_energia, preco_impressao, link_makerworld)
+
+        # ----------- Botão WhatsApp ----------- #
+        mensagem = f"Solicitação de Impressão:\n"
+        if nome_projeto:
+            mensagem += f"📌 Projeto: {nome_projeto}\n"
+        if link_makerworld:
+            mensagem += f"🔗 Link: {link_makerworld}\n"
+        mensagem += f"⏱️ Tempo: {tempo_horas_auto:.2f}h\n"
+        mensagem += f"🧵 Filamento: {filamento_gramas_auto:.2f}g\n"
+        mensagem += f"💰 Valor: R$ {preco_impressao:.2f}"
+
+        mensagem_encoded = urllib.parse.quote(mensagem)
+        whatsapp_url = f"https://wa.me/5592981246146?text={mensagem_encoded}"
+
+        st.markdown(f"[📩 Solicitar Impressão]({whatsapp_url})", unsafe_allow_html=True)
+
     else:
         st.error("❌ Não foi possível extrair tempo e filamento do G-code.")
