@@ -1,47 +1,67 @@
 import streamlit as st
+import re
+
+st.title("🖨️ Calculadora de Preço para Impressão 3D")
+
+# Função de cálculo
+def calcular_preco_projeto(tempo_horas, filamento_gramas, margem_lucro):
+    # Busca os valores configurados nos secrets
+    custo_impressora_hora = st.secrets["CUSTO_IMPRESSORA_HORA"]
+    custo_filamento_kg = st.secrets["CUSTO_FILAMENTO_KG"]
+    custo_energia_hora = st.secrets["CUSTO_ENERGIA_HORA"]
+
+    # Cálculos
+    custo_impressora = tempo_horas * custo_impressora_hora
+    custo_filamento = (filamento_gramas / 1000) * custo_filamento_kg
+    custo_energia = tempo_horas * custo_energia_hora
+
+    custo_total = custo_impressora + custo_filamento + custo_energia
+    preco_final = custo_total * (1 + margem_lucro / 100)
+
+    return preco_final, custo_total
 
 
-preco_filamento = float(st.secrets["FILAMENTO_PRECO"])  # R$/kg
-preco_kwh = float(st.secrets["PRECO_KWH"])              # R$/kWh
-potencia_media_w = float(st.secrets["POTENCIA_MEDIA_W"]) # W
+# Sidebar - Entrada de dados do usuário
+st.sidebar.header("⚙️ Configurações")
 
+# Inputs principais
+tempo_horas = st.sidebar.number_input("Tempo de impressão (horas)", value=1.0, min_value=0.1, step=0.5)
+filamento_gramas = st.sidebar.number_input("Filamento usado (g)", value=10.0, min_value=1.0, step=1.0)
+margem_lucro = st.sidebar.slider("Margem de lucro (%)", min_value=0, max_value=300, value=150, step=5)
 
-st.title("💰 Calculadora de Custo de Impressão 3D")
+# Botão de calcular
+if st.sidebar.button("Calcular preço"):
+    preco_final, custo_total = calcular_preco_projeto(tempo_horas, filamento_gramas, margem_lucro)
 
-# Entradas do usuário
-filamento_g = st.number_input("Quantidade de filamento usada (g)", min_value=0.0, step=0.1)
-tempo_input = st.text_input("Duração da impressão (ex.: '2h30' ou '150min')")
+    st.subheader("📊 Resultado")
+    st.write(f"💰 **Preço sugerido de venda:** R$ {preco_final:.2f}")
+    st.write(f"📉 **Custo total (sem lucro):** R$ {custo_total:.2f}")
 
-# Função para converter tempo
-def parse_tempo(tempo_str):
-    tempo_str = tempo_str.lower().replace(" ", "")
-    horas = minutos = 0
-    if "h" in tempo_str:
-        partes = tempo_str.split("h")
-        horas = int(partes[0]) if partes[0] else 0
-        if len(partes) > 1 and "min" in partes[1]:
-            minutos = int(partes[1].replace("min", ""))
-    elif "min" in tempo_str:
-        minutos = int(tempo_str.replace("min", ""))
+# Entrada de G-code para extrair tempo e filamento
+st.subheader("📂 Upload do G-code (opcional)")
+arquivo = st.file_uploader("Carregue um arquivo .gcode para calcular automaticamente", type=["gcode"])
+
+if arquivo is not None:
+    conteudo = arquivo.read().decode("utf-8")
+
+    # Extrair tempo total em minutos
+    match_tempo = re.search(r";TIME_ELAPSED:(\d+)", conteudo)
+    tempo_horas_auto = int(match_tempo.group(1)) / 3600 if match_tempo else None
+
+    # Extrair filamento total em mm (se disponível)
+    match_filamento = re.search(r";Filament used: ([\d\.]+)m", conteudo)
+    filamento_metros = float(match_filamento.group(1)) if match_filamento else None
+    filamento_gramas_auto = filamento_metros * 1.24 if filamento_metros else None  # 1m ≈ 1.24g PLA
+
+    if tempo_horas_auto and filamento_gramas_auto:
+        preco_final_auto, custo_total_auto = calcular_preco_projeto(
+            tempo_horas_auto, filamento_gramas_auto, margem_lucro
+        )
+
+        st.success("✅ Dados extraídos do G-code!")
+        st.write(f"⏱️ Tempo: {tempo_horas_auto:.2f} horas")
+        st.write(f"🧵 Filamento: {filamento_gramas_auto:.2f} g")
+        st.write(f"💰 **Preço sugerido:** R$ {preco_final_auto:.2f}")
+        st.write(f"📉 **Custo total:** R$ {custo_total_auto:.2f}")
     else:
-        return float(tempo_str)  # assume minutos puros
-    return horas + minutos/60
-
-# Cálculo
-if tempo_input:
-    try:
-        horas = parse_tempo(tempo_input)
-
-        custo_filamento = (filamento_g/1000) * preco_filamento
-        consumo_kwh = (potencia_media_W * horas) / 1000
-        custo_energia = consumo_kwh * preco_kwh
-        custo_total = custo_filamento + custo_energia
-
-        st.markdown(f"""
-        ### 📊 Resultado
-        - **Custo do filamento:** R$ **:blue[{custo_filamento:.2f}]**
-        - **Custo da energia:** R$ **:blue[{custo_energia:.2f}]**
-        - **Custo total:** 💵 **:green[{custo_total:.2f}]**
-        """)
-    except Exception as e:
-        st.error("Erro ao interpretar o tempo. Use formatos como `2h30` ou `150min`.")
+        st.error("Não foi possível extrair tempo e filamento do G-code.")
