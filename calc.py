@@ -3,7 +3,6 @@ import re
 import csv
 from pathlib import Path
 import urllib.parse
-import webbrowser
 
 # Configuração da página
 st.set_page_config(page_title="Calculadora para Impressão 3D", layout="centered")
@@ -35,46 +34,97 @@ def salvar_no_csv(nome, tempo, filamento, custo_impressora, custo_filamento, cus
         writer = csv.writer(arquivo)
         if not file_exists:
             writer.writerow([
-                "Projeto", "Tempo (h)", "Filamento (g)", 
-                "Custo Impressora", "Custo Filamento", "Custo Energia", 
-                "Preço Final", "Link MakerWorld"
+                "Projeto", "Tempo (h)", "Filamento (g)",
+                "Custo Impressora", "Custo Filamento", "Custo Energia",
+                "Preço de Impressão", "Link MakerWorld"
             ])
         writer.writerow([nome, tempo, filamento, custo_impressora, custo_filamento, custo_energia, preco, link])
+    
+    st.success("✅ Projeto salvo no CSV com sucesso!")
 
-# ---------------- Sidebar: entradas ---------------- #
-st.sidebar.header("Configurações da Impressão")
-nome_projeto = st.sidebar.text_input("Nome do Projeto")
-tempo = st.sidebar.number_input("Tempo de impressão (horas)", min_value=0.0, step=0.5)
-filamento = st.sidebar.number_input("Quantidade de filamento (g)", min_value=0.0, step=1.0)
+# ---------------- Sidebar ---------------- #
+st.sidebar.header("⚙️ Configurações do Projeto")
 
-# ---------------- Página Principal ---------------- #
-link_makerworld = st.text_input("🔗 Link do projeto no MakerWorld (opcional)")
+nome_projeto = st.sidebar.text_input("Nome do projeto")
+arquivo = st.sidebar.file_uploader("📂 Upload do G-code", type=["gcode"])
 
-if st.sidebar.button("Calcular"):
-    custo_impressora, custo_filamento, custo_energia, preco = calcular_custos(tempo, filamento)
+# ---------------- Página principal ---------------- #
+st.subheader("📊 Insira os dados manualmente")
 
-    st.subheader("📊 Detalhamento dos Custos")
-    st.write(f"🕒 Tempo de impressão: **{tempo:.2f} h**")
-    st.write(f"🧵 Filamento usado: **{filamento:.2f} g**")
-    st.write(f"💰 Custo da impressora: R$ {custo_impressora:.2f}")
-    st.write(f"🎨 Custo do filamento: R$ {custo_filamento:.2f}")
-    st.write(f"⚡ Custo de energia: R$ {custo_energia:.2f}")
-    st.markdown(f"### 💵 Preço de impressão: **R$ {preco:.2f}**")
+tempo_horas = st.number_input("⏱️ Tempo de impressão (horas)", value=1.0, min_value=0.1, step=0.5)
+filamento_gramas = st.number_input("🧵 Filamento usado (g)", value=10.0, min_value=1.0, step=1.0)
+link_makerworld = st.text_input("🔗 Link do projeto no MakerWorld")
 
-    # Salva no CSV
-    salvar_no_csv(nome_projeto, tempo, filamento, custo_impressora, custo_filamento, custo_energia, preco, link_makerworld)
+if st.button("Calcular custos"):
+    custo_impressora, custo_filamento, custo_energia, preco_impressao = calcular_custos(tempo_horas, filamento_gramas)
 
-    # ---------------- Botão WhatsApp ---------------- #
-    resumo = f"""Solicitação de Impressão 3D
-📌 Projeto: {nome_projeto if nome_projeto else "Não informado"}
-🔗 Link: {link_makerworld if link_makerworld else "Não informado"}
-🕒 Tempo: {tempo:.2f} h
-🧵 Filamento: {filamento:.2f} g
-💵 Valor: R$ {preco:.2f}"""
+    st.markdown(f"<p style='font-size:18px;'>🖨️ Custo da impressora: R$ {custo_impressora:.2f}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:18px;'>🧵 Custo do filamento: R$ {custo_filamento:.2f}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:18px;'>⚡ Custo de energia: R$ {custo_energia:.2f}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:22px; font-weight:bold;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
 
-    mensagem = urllib.parse.quote(resumo)
-    whatsapp_url = f"https://wa.me/5592981246146?text={mensagem}"
+    if link_makerworld:
+        st.markdown(f"<p style='font-size:16px;'>🔗 Link do projeto: <a href='{link_makerworld}' target='_blank'>{link_makerworld}</a></p>", unsafe_allow_html=True)
 
-    if st.button("📲 Solicitar Impressão"):
-        js = f"window.open('{whatsapp_url}')"  # abre em nova aba
-        st.markdown(f"<script>{js}</script>", unsafe_allow_html=True)
+    salvar_no_csv(nome_projeto, tempo_horas, filamento_gramas, custo_impressora, custo_filamento, custo_energia, preco_impressao, link_makerworld)
+
+    # ----------- Botão WhatsApp ----------- #
+    mensagem = f"Solicitação de Impressão:\n"
+    if nome_projeto:
+        mensagem += f"📌 Projeto: {nome_projeto}\n"
+    if link_makerworld:
+        mensagem += f"🔗 Link: {link_makerworld}\n"
+    mensagem += f"⏱️ Tempo: {tempo_horas:.2f}h\n"
+    mensagem += f"🧵 Filamento: {filamento_gramas:.2f}g\n"
+    mensagem += f"💰 Valor: R$ {preco_impressao:.2f}"
+
+    mensagem_encoded = urllib.parse.quote(mensagem)
+    whatsapp_url = f"https://wa.me/5592981246146?text={mensagem_encoded}"
+
+    st.markdown(f"[📩 Solicitar Impressão]({whatsapp_url})", unsafe_allow_html=True)
+
+# ---------------- Processamento do G-code ---------------- #
+if arquivo is not None:
+    conteudo = arquivo.read().decode("utf-8")
+
+    match_tempo = re.search(r";TIME_ELAPSED:(\d+)", conteudo)
+    tempo_horas_auto = int(match_tempo.group(1)) / 3600 if match_tempo else None
+
+    match_filamento = re.search(r";Filament used: ([\d\.]+)m", conteudo)
+    filamento_metros = float(match_filamento.group(1)) if match_filamento else None
+    filamento_gramas_auto = filamento_metros * 1.24 if filamento_metros else None
+
+    if tempo_horas_auto and filamento_gramas_auto:
+        custo_impressora, custo_filamento, custo_energia, preco_impressao = calcular_custos(tempo_horas_auto, filamento_gramas_auto)
+
+        st.success("✅ Dados extraídos do G-code!")
+        st.subheader("📊 Custos extraídos automaticamente")
+        st.markdown(f"<p style='font-size:18px;'>⏱️ Tempo de impressão: {tempo_horas_auto:.2f} horas</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>🧵 Quantidade de filamento: {filamento_gramas_auto:.2f} g</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>🖨️ Custo da impressora: R$ {custo_impressora:.2f}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>🧵 Custo do filamento: R$ {custo_filamento:.2f}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>⚡ Custo de energia: R$ {custo_energia:.2f}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:22px; font-weight:bold;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
+
+        if link_makerworld:
+            st.markdown(f"<p style='font-size:16px;'>🔗 Link do projeto: <a href='{link_makerworld}' target='_blank'>{link_makerworld}</a></p>", unsafe_allow_html=True)
+
+        salvar_no_csv(nome_projeto, tempo_horas_auto, filamento_gramas_auto, custo_impressora, custo_filamento, custo_energia, preco_impressao, link_makerworld)
+
+        # ----------- Botão WhatsApp ----------- #
+        mensagem = f"Solicitação de Impressão:\n"
+        if nome_projeto:
+            mensagem += f"📌 Projeto: {nome_projeto}\n"
+        if link_makerworld:
+            mensagem += f"🔗 Link: {link_makerworld}\n"
+        mensagem += f"⏱️ Tempo: {tempo_horas_auto:.2f}h\n"
+        mensagem += f"🧵 Filamento: {filamento_gramas_auto:.2f}g\n"
+        mensagem += f"💰 Valor: R$ {preco_impressao:.2f}"
+
+        mensagem_encoded = urllib.parse.quote(mensagem)
+        whatsapp_url = f"https://wa.me/5592981246146?text={mensagem_encoded}"
+
+        st.markdown(f"[📩 Solicitar Impressão]({whatsapp_url})", unsafe_allow_html=True)
+
+    else:
+        st.error("❌ Não foi possível extrair tempo e filamento do G-code.")
