@@ -60,9 +60,9 @@ st.markdown("""
 
 st.subheader("📊 Insira os dados manualmente")
 
+link_makerworld = st.text_input("🔗 Link do projeto no MakerWorld")
 tempo_horas = st.number_input("⏱️ Tempo de impressão (horas)", value=1.0, min_value=0.1, step=0.5)
 filamento_gramas = st.number_input("🧵 Filamento usado (g)", value=10.0, min_value=1.0, step=1.0)
-link_makerworld = st.text_input("🔗 Link do projeto no MakerWorld")
 
 # ---------------- Cálculo manual ---------------- #
 if st.button("📐 Calcular orçamento"):
