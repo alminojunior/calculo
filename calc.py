@@ -4,7 +4,7 @@ import csv
 from pathlib import Path
 import urllib.parse
 
-# Configuração da página
+# ---------------- Configuração da página ---------------- #
 st.set_page_config(page_title="Calculadora para Impressão 3D", layout="centered")
 st.title("🖨️ Calculadora para Impressão 3D")
 
@@ -44,24 +44,35 @@ def salvar_no_csv(nome, tempo, filamento, custo_impressora, custo_filamento, cus
 
 # ---------------- Sidebar ---------------- #
 st.sidebar.header("⚙️ Configurações do Projeto")
-
 nome_projeto = st.sidebar.text_input("Nome do projeto")
 arquivo = st.sidebar.file_uploader("📂 Upload do G-code", type=["gcode"])
 
 # ---------------- Página principal ---------------- #
+st.markdown("""
+### 📌 Passo a Passo
+1️⃣ Entre no site: [MakerWorld](https://makerworld.com/)  
+2️⃣ Escolha sua impressão e copie o link  
+3️⃣ Verifique o **tempo estimado** e a **quantidade de filamento** no projeto  
+4️⃣ Volte aqui e preencha os campos abaixo *(não obrigatório)*  
+5️⃣ Clique no botão **Calcular orçamento**  
+6️⃣ Solicite sua impressão ✅  
+""")
+
 st.subheader("📊 Insira os dados manualmente")
 
 tempo_horas = st.number_input("⏱️ Tempo de impressão (horas)", value=1.0, min_value=0.1, step=0.5)
 filamento_gramas = st.number_input("🧵 Filamento usado (g)", value=10.0, min_value=1.0, step=1.0)
 link_makerworld = st.text_input("🔗 Link do projeto no MakerWorld")
 
-if st.button("Calcular custos"):
+# ---------------- Cálculo manual ---------------- #
+if st.button("📐 Calcular orçamento"):
     custo_impressora, custo_filamento, custo_energia, preco_impressao = calcular_custos(tempo_horas, filamento_gramas)
 
+    st.markdown("## 📋 Detalhamento dos Custos")
     st.markdown(f"<p style='font-size:18px;'>🖨️ Custo da impressora: R$ {custo_impressora:.2f}</p>", unsafe_allow_html=True)
     st.markdown(f"<p style='font-size:18px;'>🧵 Custo do filamento: R$ {custo_filamento:.2f}</p>", unsafe_allow_html=True)
     st.markdown(f"<p style='font-size:18px;'>⚡ Custo de energia: R$ {custo_energia:.2f}</p>", unsafe_allow_html=True)
-    st.markdown(f"<p style='font-size:22px; font-weight:bold;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:24px; font-weight:bold; color:green;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
 
     if link_makerworld:
         st.markdown(f"<p style='font-size:16px;'>🔗 Link do projeto: <a href='{link_makerworld}' target='_blank'>{link_makerworld}</a></p>", unsafe_allow_html=True)
@@ -80,7 +91,6 @@ if st.button("Calcular custos"):
 
     mensagem_encoded = urllib.parse.quote(mensagem)
     whatsapp_url = f"https://wa.me/5592981246146?text={mensagem_encoded}"
-
     st.markdown(f"[📩 Solicitar Impressão]({whatsapp_url})", unsafe_allow_html=True)
 
 # ---------------- Processamento do G-code ---------------- #
@@ -104,7 +114,7 @@ if arquivo is not None:
         st.markdown(f"<p style='font-size:18px;'>🖨️ Custo da impressora: R$ {custo_impressora:.2f}</p>", unsafe_allow_html=True)
         st.markdown(f"<p style='font-size:18px;'>🧵 Custo do filamento: R$ {custo_filamento:.2f}</p>", unsafe_allow_html=True)
         st.markdown(f"<p style='font-size:18px;'>⚡ Custo de energia: R$ {custo_energia:.2f}</p>", unsafe_allow_html=True)
-        st.markdown(f"<p style='font-size:22px; font-weight:bold;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:24px; font-weight:bold; color:green;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
 
         if link_makerworld:
             st.markdown(f"<p style='font-size:16px;'>🔗 Link do projeto: <a href='{link_makerworld}' target='_blank'>{link_makerworld}</a></p>", unsafe_allow_html=True)
@@ -123,7 +133,6 @@ if arquivo is not None:
 
         mensagem_encoded = urllib.parse.quote(mensagem)
         whatsapp_url = f"https://wa.me/5592981246146?text={mensagem_encoded}"
-
         st.markdown(f"[📩 Solicitar Impressão]({whatsapp_url})", unsafe_allow_html=True)
 
     else:
