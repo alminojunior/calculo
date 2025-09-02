@@ -3,7 +3,8 @@ import re
 import csv
 from pathlib import Path
 
-st.title("🖨️ Calculadora de Custos de Impressão 3D")
+st.set_page_config(page_title="Calculadora para Impressão 3D", layout="centered")
+st.title("🖨️ Calculadora para Impressão 3D")
 
 CSV_FILE = "projetos_3d.csv"
 csv_path = Path(CSV_FILE)
@@ -38,7 +39,7 @@ def salvar_no_csv(nome, tempo, filamento, custo_impressora, custo_filamento, cus
     st.success("✅ Projeto salvo no CSV com sucesso!")
 
 # Sidebar - Entrada de dados
-st.sidebar.header("⚙️ Configurações")
+st.sidebar.header("⚙️ Configurações do Projeto")
 
 tempo_horas = st.sidebar.number_input("Tempo de impressão (horas)", value=1.0, min_value=0.1, step=0.5)
 filamento_gramas = st.sidebar.number_input("Filamento usado (g)", value=10.0, min_value=1.0, step=1.0)
@@ -49,14 +50,16 @@ link_makerworld = st.sidebar.text_input("🔗 Link do projeto no MakerWorld")
 if st.sidebar.button("Calcular custos"):
     custo_impressora, custo_filamento, custo_energia, preco_impressao = calcular_custos(tempo_horas, filamento_gramas)
 
-    st.subheader("📊 Detalhamento dos Custos")
-    st.write(f"🖨️ **Custo da impressora:** R$ {custo_impressora:.2f}")
-    st.write(f"🧵 **Custo do filamento:** R$ {custo_filamento:.2f}")
-    st.write(f"⚡ **Custo de energia:** R$ {custo_energia:.2f}")
-    st.markdown(f"💰 **Preço de impressão (com margem): R$ {preco_impressao:.2f}**")
+    st.subheader("📊 Custos do Projeto")
+    st.markdown(f"<p style='font-size:18px;'>⏱️ Tempo de impressão: {tempo_horas:.2f} horas</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:18px;'>🧵 Quantidade de filamento: {filamento_gramas:.2f} g</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:18px;'>🖨️ Custo da impressora: R$ {custo_impressora:.2f}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:18px;'>🧵 Custo do filamento: R$ {custo_filamento:.2f}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:18px;'>⚡ Custo de energia: R$ {custo_energia:.2f}</p>", unsafe_allow_html=True)
+    st.markdown(f"<p style='font-size:22px; font-weight:bold;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
 
     if link_makerworld:
-        st.write(f"🔗 **Link do projeto:** {link_makerworld}")
+        st.markdown(f"<p style='font-size:16px;'>🔗 Link do projeto: <a href='{link_makerworld}' target='_blank'>{link_makerworld}</a></p>", unsafe_allow_html=True)
 
     # Salvar no CSV
     salvar_no_csv(nome_projeto, tempo_horas, filamento_gramas, custo_impressora, custo_filamento, custo_energia, preco_impressao, link_makerworld)
@@ -79,14 +82,16 @@ if arquivo is not None:
         )
 
         st.success("✅ Dados extraídos do G-code!")
-        st.subheader("📊 Detalhamento dos Custos")
-        st.write(f"🖨️ **Custo da impressora:** R$ {custo_impressora:.2f}")
-        st.write(f"🧵 **Custo do filamento:** R$ {custo_filamento:.2f}")
-        st.write(f"⚡ **Custo de energia:** R$ {custo_energia:.2f}")
-        st.markdown(f"💰 **Preço de impressão (com margem): R$ {preco_impressao:.2f}**")
+        st.subheader("📊 Custos do Projeto")
+        st.markdown(f"<p style='font-size:18px;'>⏱️ Tempo de impressão: {tempo_horas_auto:.2f} horas</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>🧵 Quantidade de filamento: {filamento_gramas_auto:.2f} g</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>🖨️ Custo da impressora: R$ {custo_impressora:.2f}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>🧵 Custo do filamento: R$ {custo_filamento:.2f}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:18px;'>⚡ Custo de energia: R$ {custo_energia:.2f}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='font-size:22px; font-weight:bold;'>💰 Preço de impressão R$ {preco_impressao:.2f}</p>", unsafe_allow_html=True)
 
         if link_makerworld:
-            st.write(f"🔗 **Link do projeto:** {link_makerworld}")
+            st.markdown(f"<p style='font-size:16px;'>🔗 Link do projeto: <a href='{link_makerworld}' target='_blank'>{link_makerworld}</a></p>", unsafe_allow_html=True)
 
         # Salvar no CSV
         salvar_no_csv(nome_projeto, tempo_horas_auto, filamento_gramas_auto, custo_impressora, custo_filamento, custo_energia, preco_impressao, link_makerworld)
