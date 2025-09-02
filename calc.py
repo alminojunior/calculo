@@ -45,7 +45,6 @@ def salvar_no_csv(nome, tempo, filamento, custo_impressora, custo_filamento, cus
 st.sidebar.header("⚙️ Configurações do Projeto")
 
 nome_projeto = st.sidebar.text_input("Nome do projeto")
-link_makerworld = st.sidebar.text_input("🔗 Link do projeto no MakerWorld")
 arquivo = st.sidebar.file_uploader("📂 Upload do G-code", type=["gcode"])
 
 # ---------------- Página principal ---------------- #
@@ -53,6 +52,7 @@ st.subheader("📊 Insira os dados manualmente")
 
 tempo_horas = st.number_input("⏱️ Tempo de impressão (horas)", value=1.0, min_value=0.1, step=0.5)
 filamento_gramas = st.number_input("🧵 Filamento usado (g)", value=10.0, min_value=1.0, step=1.0)
+link_makerworld = st.text_input("🔗 Link do projeto no MakerWorld")
 
 if st.button("Calcular custos"):
     custo_impressora, custo_filamento, custo_energia, preco_impressao = calcular_custos(tempo_horas, filamento_gramas)
