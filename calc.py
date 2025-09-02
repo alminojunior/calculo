@@ -1,9 +1,10 @@
 import streamlit as st
 
-# Valores secretos (só você vê no painel do Streamlit Cloud → Settings → Secrets)
+
 preco_filamento = float(st.secrets["FILAMENTO_PRECO"])  # R$/kg
-preco_kwh = float(st.secrets["ENERGIA_KWH"])           # R$/kWh
-potencia_media_W = float(st.secrets["POTENCIA_W"])     # W
+preco_kwh = float(st.secrets["PRECO_KWH"])              # R$/kWh
+potencia_media_w = float(st.secrets["POTENCIA_MEDIA_W"]) # W
+
 
 st.title("💰 Calculadora de Custo de Impressão 3D")
 
