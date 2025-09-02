@@ -4,11 +4,12 @@ import re
 st.title("🖨️ Calculadora de Preço para Impressão 3D")
 
 # Função de cálculo
-def calcular_preco_projeto(tempo_horas, filamento_gramas, margem_lucro):
+def calcular_preco_projeto(tempo_horas, filamento_gramas):
     # Busca os valores configurados nos secrets
     custo_impressora_hora = st.secrets["CUSTO_IMPRESSORA_HORA"]
     custo_filamento_kg = st.secrets["CUSTO_FILAMENTO_KG"]
     custo_energia_hora = st.secrets["CUSTO_ENERGIA_HORA"]
+    margem_lucro = st.secrets["MARGEM_LUCRO"]  # agora vem do secret
 
     # Cálculos
     custo_impressora = tempo_horas * custo_impressora_hora
@@ -27,11 +28,10 @@ st.sidebar.header("⚙️ Configurações")
 # Inputs principais
 tempo_horas = st.sidebar.number_input("Tempo de impressão (horas)", value=1.0, min_value=0.1, step=0.5)
 filamento_gramas = st.sidebar.number_input("Filamento usado (g)", value=10.0, min_value=1.0, step=1.0)
-margem_lucro = st.sidebar.slider("Margem de lucro (%)", min_value=0, max_value=300, value=150, step=5)
 
 # Botão de calcular
 if st.sidebar.button("Calcular preço"):
-    preco_final, custo_total = calcular_preco_projeto(tempo_horas, filamento_gramas, margem_lucro)
+    preco_final, custo_total = calcular_preco_projeto(tempo_horas, filamento_gramas)
 
     st.subheader("📊 Resultado")
     st.write(f"💰 **Preço sugerido de venda:** R$ {preco_final:.2f}")
@@ -55,7 +55,7 @@ if arquivo is not None:
 
     if tempo_horas_auto and filamento_gramas_auto:
         preco_final_auto, custo_total_auto = calcular_preco_projeto(
-            tempo_horas_auto, filamento_gramas_auto, margem_lucro
+            tempo_horas_auto, filamento_gramas_auto
         )
 
         st.success("✅ Dados extraídos do G-code!")
