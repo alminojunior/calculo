@@ -50,7 +50,7 @@ arquivo = st.sidebar.file_uploader("📂 Upload do G-code", type=["gcode"])
 # ---------------- Página principal ---------------- #
 st.markdown("""
 ### 📌 Passo a Passo
-1️⃣ Entre no site: [MakerWorld](https://makerworld.com/)  
+1️⃣ Entre no site: [MakerWorld](https://makerworld.com/3d-models)  
 2️⃣ Escolha sua impressão e copie o link  
 3️⃣ Verifique o **tempo estimado** e a **quantidade de filamento** no projeto  
 4️⃣ Volte aqui e preencha os campos abaixo *(não obrigatório)*  
